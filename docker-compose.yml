@@ -1,0 +1,74 @@
+services:
+  # --- Ollama Service ---
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+    environment:
+      - OLLAMA_HOST=ollama
+    restart: unless-stopped    
+    depends_on:
+      model-puller:
+        condition: service_healthy
+
+  # --- Model Loader (Auto-deploys DeepSeek-R1) ---
+  model-puller:
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
+    container_name: model_puller
+    volumes:
+      - ollama_storage:/root/.ollama
+    entrypoint: ollama serve 
+                && /bin/sh -c "for i in {1..30}; do ollama list 
+                && break; echo 'Waiting for Ollama server...'; sleep 10; done 
+                && ollama pull deepseek-r1:1.5b"
+                && exit 0
+    healthcheck:
+      test: [ "CMD", "ollama", "list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  # --- OpenSearch Service ---
+  opensearch:
+    image: opensearchproject/opensearch:${OPENSEARCH_VERSION:-latest}
+    container_name: opensearch
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - plugins.security.disabled=true            # Disables the security plugin
+      - DISABLE_INSTALL_DEMO_CONFIG=true          # Prevents auto-generating demo certs
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx1g"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD:-ComplexPass!23$}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+
+  # --- OpenSearch Dashboards (Optional UI) ---
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:${OPENSEARCH_DASHBOARDS_VERSION:-latest}
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+    depends_on:
+      - opensearch
+
+volumes:
+  ollama_storage:
+  opensearch_data:
