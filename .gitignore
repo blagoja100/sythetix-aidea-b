@@ -1,1 +1,3 @@
 .continue/agents/new-config.yaml
+src/data/txt/*.txt
+src/service/__pycache__/
