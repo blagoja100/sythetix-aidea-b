@@ -1,6 +1,9 @@
 from doc_indexer import IndexInitializer, IndexManager
 from doc_loader import TxtFileLoader
 from doc_embedder import DocEmbedding
+from logger import Logger
+
+logger = Logger("Main")
 
 if __name__ == "__main__":
 
@@ -10,12 +13,17 @@ if __name__ == "__main__":
     
     # Load and chunk documents
     loader = TxtFileLoader()
-    chunks = loader.load_txt_file_chunks()
+    file_chunks = loader.load_txt_file_chunks()
 
     # Embed chunks
-    embedder = DocEmbedding()
-    embeddings = embedder.embed(chunks)
+    if len(file_chunks) == 0:
+        logger.log("No chunks to embed. Exiting.")
+        exit(0)
+        
+    embedder = DocEmbedding()    
+    indexManager = IndexManager()
 
-    indexManager = IndexManager()    
-    for content, emb in zip(chunks, embeddings):
-        indexManager.index_chunk(content, emb)
+    for filename, chunks in file_chunks.items():
+        embeddings = embedder.embed(filename, chunks)
+        for content, emb in zip(chunks, embeddings):
+            indexManager.index_chunk(content, emb, metadata={"filename": filename})
