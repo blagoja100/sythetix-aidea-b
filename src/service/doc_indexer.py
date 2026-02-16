@@ -1,9 +1,13 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 #Create a vector index in OpenSearch
 #This index is your knowledge base for RAG.
 import json
 from opensearchpy import OpenSearch
 from uuid import uuid4
-from logger import Logger
+from tools.logger import Logger
 
 logger = Logger("DocIndexer")
 
@@ -45,9 +49,9 @@ class IndexInitializer:
             },
             "mappings": {
                 "properties": {
-                    "content": {"type": "text"},
+                    "text": {"type": "text"},
                     "metadata": {"type": "object"},
-                    "embedding": {
+                    "vector_field": {
                         "type": "knn_vector",
                         "dimension": 384,  # must match your embedding model
                         "method": {
@@ -79,9 +83,9 @@ class IndexManager:
     
     def index_chunk(self, content, embedding, metadata=None):
         doc = {
-            "content": content,
+            "text": content,
             "metadata": metadata or {},
-            "embedding": embedding.tolist()
+            "vector_field": embedding.tolist()
         }
         self.client.index(index=self.index_name, id=str(uuid4()), body=doc)
         logger.log(f"Indexed chunk with metadata: {metadata}, content length: {len(content)}, embedding dim: {len(embedding)}")

@@ -1,6 +1,9 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from typing import List
-from logger import Logger
+from tools.logger import Logger
 from sentence_transformers import SentenceTransformer
 
 logger = Logger("DocEmbedder")

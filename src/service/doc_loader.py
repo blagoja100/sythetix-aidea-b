@@ -1,7 +1,10 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from typing import List, Dict
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from logger import Logger
+from tools.logger import Logger
 
 logger = Logger("DocLoader")
 

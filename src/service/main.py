@@ -1,7 +1,7 @@
 from doc_indexer import IndexInitializer, IndexManager
 from doc_loader import TxtFileLoader
 from doc_embedder import DocEmbedding
-from logger import Logger
+from tools.logger import Logger
 
 logger = Logger("Main")
 
