@@ -24,7 +24,7 @@ if __name__ == "__main__":
         Context:
         {context}
         Question:
-        {question}Explain to 
+        {question}
         If the answer is not in the context, say you don't know.
         """)
     
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     {
         "question": RunnablePassthrough(),
         "context": RunnableLambda(
-            lambda x: format_docs(retriever.get_relevant_documents(x["question"]))
+            lambda x: format_docs(retriever.get_relevant_documents(x))
         ),
     }
         | prompt
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         topic = input("Enter a topic (or 'quit' to exit): ")
         if topic.lower() == "quit":
             break
-        answer = rag_chain.invoke({"question": topic})
+        answer = rag_chain.invoke(topic)
         print("-----------------------------------------------------------------------------")
         print("\n")
         print(answer)
