@@ -1,3 +1,5 @@
 .continue/agents/new-config.yaml
 data/txt/*.txt
+data/txt/Archive/*.txt
+data/txt/Archive - Copy/*.txt
 src/service/__pycache__/

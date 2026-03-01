@@ -9,28 +9,26 @@ services:
       - ollama_storage:/root/.ollama
     environment:
       - OLLAMA_HOST=ollama
-    restart: unless-stopped    
+    restart: unless-stopped
     depends_on:
       model-puller:
-        condition: service_healthy
+        condition: service_completed_successfully
 
-  # --- Model Loader (Auto-deploys DeepSeek-R1) ---
+  # --- Model Puller (One-shot: pulls DeepSeek-R1 then exits) ---
   model-puller:
     image: ollama/ollama:${OLLAMA_VERSION:-latest}
     container_name: model_puller
     volumes:
       - ollama_storage:/root/.ollama
-    entrypoint: ollama serve 
-                && /bin/sh -c "for i in {1..30}; do ollama list 
-                && break; echo 'Waiting for Ollama server...'; sleep 10; done 
-                && ollama pull deepseek-r1:1.5b"
-                && exit 0
-    healthcheck:
-      test: [ "CMD", "ollama", "list" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    
+    entrypoint: >
+      /bin/sh -c "
+        ollama serve &
+        for i in $$(seq 1 30); do ollama list >/dev/null 2>&1 && break; echo 'Waiting for Ollama server...'; sleep 10; done &&
+        ollama pull deepseek-r1:1.5b &&
+        echo 'Model pulled successfully. Exiting.' &&
+        exit 0
+      "
+
   # --- OpenSearch Service ---
   opensearch:
     image: opensearchproject/opensearch:${OPENSEARCH_VERSION:-latest}
@@ -40,8 +38,8 @@ services:
       - node.name=opensearch-node
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - plugins.security.disabled=true            # Disables the security plugin
-      - DISABLE_INSTALL_DEMO_CONFIG=true          # Prevents auto-generating demo certs
+      - plugins.security.disabled=true # Disables the security plugin
+      - DISABLE_INSTALL_DEMO_CONFIG=true # Prevents auto-generating demo certs
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx1g"
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD:-ComplexPass!23$}
     ulimits:

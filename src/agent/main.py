@@ -41,8 +41,15 @@ if __name__ == "__main__":
     )
 
     while True:
+        print("\n")
+        print("-----------------------------------------------------------------------------")
+        print("\n")
         topic = input("Enter a topic (or 'quit' to exit): ")
         if topic.lower() == "quit":
             break
         answer = rag_chain.invoke({"question": topic})
+        print("-----------------------------------------------------------------------------")
+        print("\n")
         print(answer)
+        print("\n")
+
